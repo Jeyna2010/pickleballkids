@@ -27,7 +27,7 @@
                         },
                         court: {
                             green: '#22c55e', 
-                            dark: '#0369a1', // Softer deep blue-teal for nice contrast
+                            dark: '#0369a1',
                             light: '#e0f2fe',
                             surface: '#15803d'
                         },
@@ -217,15 +217,16 @@
                 </div>
             </div>
 
-            <!-- NEWS & ANNOUNCEMENTS SECTION (BUILT INTO HOME) -->
+            <!-- NEWS & ANNOUNCEMENTS SECTION WITH DROPDOWN -->
             <div class="bg-white rounded-[2.5rem] p-8 md:p-10 border-4 border-navy-800 shadow-[6px_6px_0_0_rgba(21,41,63,1)] relative">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-2 border-navy-100 pb-4 mb-6">
                     <div>
                         <span class="text-xs font-bold text-court-dark uppercase tracking-wider">Latest updates</span>
                         <h2 class="font-display text-3xl font-bold text-navy-900">Tournament News & Announcements</h2>
                     </div>
-                    <button onclick="navigateTo('registration')" class="text-sm font-bold text-accent-orange hover:text-navy-900 bg-navy-50 px-4 py-2 rounded-xl border-2 border-navy-200 transition-colors flex items-center gap-2">
-                        View All Tournaments <i class="fa-solid fa-arrow-right"></i>
+                    <!-- View All Dropdown Toggle -->
+                    <button onclick="toggleNewsDropdown()" id="viewAllBtn" class="text-sm font-bold text-navy-900 hover:text-accent-orange bg-navy-50 px-5 py-2.5 rounded-xl border-2 border-navy-200 transition-colors flex items-center gap-2 shadow-sm">
+                        <span id="viewAllText">View All Tournaments</span> <i id="viewAllIcon" class="fa-solid fa-chevron-down transition-transform"></i>
                     </button>
                 </div>
                 
@@ -242,7 +243,9 @@
                         </div>
                         <div class="mt-6 pt-4 border-t border-navy-200 flex justify-between items-center">
                             <span class="text-xs font-bold text-navy-500">Community Center Courts</span>
-                            <button onclick="navigateTo('registration')" class="text-xs font-bold text-white bg-court-dark px-4 py-2 rounded-xl hover:bg-navy-900 transition-colors">Register Now</button>
+                            <a href="https://forms.gle/example" target="_blank" class="text-xs font-bold text-white bg-court-dark px-4 py-2 rounded-xl hover:bg-navy-900 transition-colors flex items-center gap-1.5">
+                                Register Now <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
                         </div>
                     </div>
 
@@ -262,14 +265,49 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Hidden Dropdown Announcements (Shown when View All is clicked) -->
+                <div id="extraAnnouncements" class="hidden grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t-2 border-dashed border-navy-200">
+                    <!-- News Item 3 -->
+                    <div class="bg-navy-50 p-6 rounded-2xl border-2 border-navy-100 flex flex-col justify-between hover:border-court-dark transition-colors">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="bg-emerald-200 text-navy-900 px-2.5 py-0.5 rounded text-xs font-bold uppercase">Summer Cup</span>
+                                <span class="text-xs font-bold text-navy-400"><i class="fa-regular fa-clock mr-1"></i> Aug 20</span>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold mb-2 text-navy-900">Summer Junior Cup Completed!</h3>
+                            <p class="text-navy-600 font-medium text-sm">Amazing matches played by all junior athletes. Check the registration page for past winners & results.</p>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-navy-200 flex justify-between items-center">
+                            <span class="text-xs font-bold text-navy-500">Archived Event</span>
+                            <button onclick="navigateTo('registration')" class="text-xs font-bold text-navy-900 bg-white border border-navy-300 px-4 py-2 rounded-xl hover:bg-navy-100 transition-colors">View Past Results</button>
+                        </div>
+                    </div>
+
+                    <!-- News Item 4 -->
+                    <div class="bg-navy-50 p-6 rounded-2xl border-2 border-navy-100 flex flex-col justify-between hover:border-court-dark transition-colors">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="bg-amber-200 text-navy-900 px-2.5 py-0.5 rounded text-xs font-bold uppercase">Training</span>
+                                <span class="text-xs font-bold text-navy-400"><i class="fa-regular fa-clock mr-1"></i> Sep 05</span>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold mb-2 text-navy-900">Free Weekend Skills Clinic</h3>
+                            <p class="text-navy-600 font-medium text-sm">Join our coaches this Saturday for serving and dinking workshops designed for beginners.</p>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-navy-200 flex justify-between items-center">
+                            <span class="text-xs font-bold text-navy-500">Court #3</span>
+                            <a href="https://wa.me/1234567890?text=Hello%20I%20want%20to%20join%20the%20clinic" target="_blank" class="text-xs font-bold text-white bg-green-600 px-4 py-2 rounded-xl hover:bg-green-700 transition-colors">RSVP via WhatsApp</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- REGISTRATION VIEW (No Winners Section) -->
+        <!-- REGISTRATION VIEW WITH PAST TOURNAMENT WINNERS -->
         <section id="view-registration" class="page-section space-y-10">
             <div class="text-center max-w-2xl mx-auto bg-white p-8 rounded-3xl border-4 border-navy-800 shadow-[6px_6px_0_0_rgba(21,41,63,1)]">
-                <h2 class="font-display text-4xl font-bold text-navy-900">Tournaments & Registration</h2>
-                <p class="text-navy-600 font-medium mt-2 text-base">Browse upcoming events and sign up your team securely via Google Form.</p>
+                <h2 class="font-display text-4xl font-bold text-navy-900">Tournaments & Past Results</h2>
+                <p class="text-navy-600 font-medium mt-2 text-base">Browse upcoming events, sign up securely via Google Form, and view previous tournament champions.</p>
             </div>
 
             <div class="bg-white border-4 border-navy-800 rounded-[2.5rem] overflow-hidden shadow-[6px_6px_0_0_rgba(21,41,63,1)]">
@@ -308,6 +346,52 @@
                     </div>
                 </div>
             </div>
+
+            <!-- PAST TOURNAMENTS & WINNERS SECTION -->
+            <div class="bg-white border-4 border-navy-800 rounded-[2.5rem] p-8 md:p-10 shadow-[6px_6px_0_0_rgba(21,41,63,1)]">
+                <div class="border-b-2 border-navy-100 pb-4 mb-6">
+                    <span class="text-xs font-bold text-accent-orange uppercase tracking-wider">Archived Results</span>
+                    <h3 class="font-display text-3xl font-bold text-navy-900">Past Tournament Champions</h3>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Past Tournament 1 -->
+                    <div class="bg-navy-50 p-6 rounded-2xl border-2 border-navy-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-display font-bold text-navy-900 text-lg">Summer Junior Cup 2024</span>
+                            <span class="text-xs bg-court-light text-navy-900 px-2.5 py-1 rounded-full font-bold">Completed</span>
+                        </div>
+                        <div class="space-y-2 mt-4 text-sm font-semibold text-navy-700">
+                            <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-navy-200">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-trophy text-accent-yellow"></i> 1st Place (Champion)</span>
+                                <span class="font-bold text-navy-900">Team Lightning</span>
+                            </div>
+                            <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-navy-200">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-medal text-slate-400"></i> 2nd Place (Runner-Up)</span>
+                                <span class="font-bold text-navy-900">Team Smashers</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Past Tournament 2 -->
+                    <div class="bg-navy-50 p-6 rounded-2xl border-2 border-navy-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-display font-bold text-navy-900 text-lg">Spring Kids Open 2024</span>
+                            <span class="text-xs bg-court-light text-navy-900 px-2.5 py-1 rounded-full font-bold">Completed</span>
+                        </div>
+                        <div class="space-y-2 mt-4 text-sm font-semibold text-navy-700">
+                            <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-navy-200">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-trophy text-accent-yellow"></i> 1st Place (Champion)</span>
+                                <span class="font-bold text-navy-900">Team Aces</span>
+                            </div>
+                            <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-navy-200">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-medal text-slate-400"></i> 2nd Place (Runner-Up)</span>
+                                <span class="font-bold text-navy-900">Team Rockets</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- DASHBOARD VIEW -->
@@ -330,7 +414,7 @@
                         <h3 class="font-display font-bold text-2xl text-navy-900 border-b-4 border-court-dark pb-1 inline-block">Upcoming Matches</h3>
                     </div>
                     
-                    <!-- Scoreboard Style Match Card (No Court Number & No Tag) -->
+                    <!-- Scoreboard Style Match Card -->
                     <div class="bg-navy-900 p-6 rounded-[2rem] border-4 border-navy-800 shadow-[6px_6px_0_0_rgba(21,41,63,0.2)] relative">
                         <div class="absolute top-0 right-6 bg-accent-yellow text-navy-900 text-xs font-bold px-3.5 py-1 rounded-b-xl border-x-2 border-b-2 border-navy-900">Next Match</div>
                         
@@ -361,7 +445,7 @@
 
                     <h3 class="font-display font-bold text-2xl text-navy-900 border-b-4 border-court-dark pb-1 inline-block mt-6">Recent Results</h3>
                     
-                    <!-- Result Card 1 (Team 1 vs Team 5 - Format: Your Score - Opponent) -->
+                    <!-- Result Card 1 -->
                     <div class="bg-white p-6 rounded-[2rem] border-4 border-navy-800 shadow-card hover:border-court-dark transition-colors">
                         <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
                             <div class="flex items-center gap-3 cursor-pointer group" onclick="openTeamModal('Team 1', ['Alex M.', 'Sarah K.', 'Leo P.', 'Mia R.'], 'Team 1 (Your Team)')">
@@ -372,7 +456,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Highlighted Points: Your Score - Opponent Score -->
                             <div class="flex flex-col items-center justify-center text-center py-1" onclick="simulateScoreUpdate(this)">
                                 <span class="text-[10px] text-navy-500 font-bold uppercase tracking-wider mb-1">Total Points (Your - Opponent)</span>
                                 <div class="bg-navy-900 px-5 py-2 rounded-xl border-3 border-navy-800 flex items-center justify-center gap-3 shadow-inner cursor-pointer">
@@ -393,7 +476,7 @@
                         </div>
                     </div>
 
-                    <!-- Result Card 2 (Team 1 vs Team 2) -->
+                    <!-- Result Card 2 -->
                     <div class="bg-white p-6 rounded-[2rem] border-4 border-navy-800 shadow-card hover:border-accent-orange transition-colors">
                         <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
                             <div class="flex items-center gap-3 cursor-pointer group" onclick="openTeamModal('Team 1', ['Alex M.', 'Sarah K.', 'Leo P.', 'Mia R.'], 'Team 1 (Your Team)')">
@@ -425,7 +508,7 @@
                     </div>
                 </div>
 
-                <!-- Standings Sidebar (No Group B) -->
+                <!-- Standings Sidebar -->
                 <aside class="space-y-6">
                     <div class="bg-white p-6 rounded-[2rem] border-4 border-navy-800 shadow-card sticky top-24">
                         <h4 class="font-display font-bold text-2xl mb-5 text-navy-900 flex items-center gap-3">
@@ -591,6 +674,25 @@
             } else {
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
+            }
+        }
+
+        // News Dropdown Toggler
+        function toggleNewsDropdown() {
+            const extra = document.getElementById('extraAnnouncements');
+            const btnText = document.getElementById('viewAllText');
+            const icon = document.getElementById('viewAllIcon');
+            
+            if (extra.classList.contains('hidden')) {
+                extra.classList.remove('hidden');
+                extra.classList.add('grid');
+                btnText.innerText = 'Show Less';
+                icon.classList.add('rotate-180');
+            } else {
+                extra.classList.add('hidden');
+                extra.classList.remove('grid');
+                btnText.innerText = 'View All Tournaments';
+                icon.classList.remove('rotate-180');
             }
         }
 
