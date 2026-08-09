@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PickleKids Tournaments</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        display: ['Fredoka', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            50: '#f0f4f8',
+                            100: '#d9e2ec',
+                            500: '#334e68',
+                            800: '#102a43', // Deep Navy
+                            900: '#0b1d2e',
+                        },
+                        court: {
+                            green: '#38bdf8', // Adjusted to sky/teal soft contrast from bright green blending
+                            dark: '#0ea5e9',
+                            light: '#bae6fd',
+                            surface: '#4ade80'
+                        },
+                        accent: {
+                            yellow: '#fde047', 
+                            orange: '#fb923c' 
+                        }
+                    },
+                    boxShadow: {
+                        'paddle': '0 8px 0 0 rgba(16, 42, 67, 1)',
+                        'card': '0 6px 0 0 rgba(16, 42, 67, 0.1)',
+                    },
+                    animation: {
+                        'score-flash': 'scoreUpdate 1s ease-out',
+                        'bounce-slight': 'bounceSlight 2s infinite',
+                    },
+                    keyframes: {
+                        scoreUpdate: {
+                            '0%, 100%': { transform: 'scale(1)', color: 'inherit' },
+                            '50%': { transform: 'scale(1.2)', color: '#fb923c' },
+                        },
+                        bounceSlight: {
+                            '0%, 100%': { transform: 'translateY(-2%)' },
+                            '50%': { transform: 'translateY(2%)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #22c55e;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.2) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(255,255,255,0.2) 2px, transparent 2px);
+            background-size: 50px 50px;
+            background-position: center center;
+            background-attachment: fixed;
+        }
+
+        .court-line-vertical {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            background-color: rgba(255, 255, 255, 0.3);
+            z-index: -1;
+        }
+        .court-line-horizontal {
+            position: fixed;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.3);
+            z-index: -1;
+        }
+
+        .page-section {
+            display: none;
+            animation: slideUpFade 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .page-section.active {
+            display: block;
+        }
+        
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 4px;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #fde047;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+        .nav-link.active {
+            color: white;
+            font-weight: 800;
+        }
+
+        .shape-paddle {
+            border-radius: 40px 40px 100px 100px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #d9e2ec; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #102a43; 
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body class="text-navy-800 font-sans min-h-screen flex flex-col relative overflow-x-hidden">
+
+    <div class="court-line-vertical left-4 md:left-[10%]"></div>
+    <div class="court-line-vertical right-4 md:right-[10%]"></div>
+    <div class="court-line-horizontal top-32"></div>
+
+    <header class="bg-navy-800 text-white sticky top-0 z-40 border-b-4 border-accent-yellow shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer group" onclick="navigateTo('home')">
+                    <div class="w-12 h-12 bg-court-dark rounded-full flex items-center justify-center border-4 border-white group-hover:rotate-12 transition-transform">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8Z" /></svg>
+                    </div>
+                    <span class="font-display font-bold text-3xl tracking-tight text-white">PickleKids</span>
+                </div>
+                
+                <!-- Desktop Nav -->
+                <nav class="hidden md:flex space-x-8 items-center">
+                    <button onclick="navigateTo('home')" class="nav-link active font-display text-lg text-navy-100 hover:text-white transition-colors">Home & News</button>
+                    <button onclick="navigateTo('registration')" class="nav-link font-display text-lg text-navy-100 hover:text-white transition-colors">Tournaments</button>
+                    <a href="https://wa.me/1234567890" target="_blank" class="nav-link font-display text-lg text-navy-100 hover:text-white transition-colors flex items-center gap-2">
+                        <i class="fa-brands fa-whatsapp text-court-light"></i> Support
+                    </a>
+                </nav>
+
+                <!-- Login / Dashboard Action -->
+                <div class="hidden md:flex items-center gap-4">
+                    <button id="navDashboardBtn" onclick="navigateTo('dashboard')" class="hidden font-display text-xl font-bold text-accent-yellow hover:text-white transition-colors items-center gap-2">
+                        <i class="fa-solid fa-medal"></i> My Dashboard
+                    </button>
+                    <button id="navLoginBtn" onclick="toggleModal('loginModal')" class="bg-white text-navy-800 px-8 py-2.5 rounded-full font-display font-bold text-lg hover:bg-accent-yellow hover:text-navy-900 transition-colors shadow-[0_4px_0_0_rgba(253,224,71,0.5)] border-2 border-transparent hover:border-navy-800">
+                        Log In
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        
+        <!-- HOME & NEWS VIEW -->
+        <section id="view-home" class="page-section active space-y-16">
+            
+            <div class="bg-navy-800 rounded-[3rem] p-8 md:p-12 shadow-card border-4 border-white relative overflow-hidden flex flex-col md:flex-row items-center gap-8 mt-4">
+                <div class="absolute -right-20 -top-20 w-64 h-64 bg-court-dark rounded-full opacity-20 blur-3xl"></div>
+                
+                <div class="flex-1 text-center md:text-left z-10 text-white space-y-6">
+                    <div class="inline-block bg-accent-yellow text-navy-900 px-4 py-1.5 rounded-full font-bold text-sm mb-2 transform -rotate-2">
+                        Serving Up Smiles! 🎾
+                    </div>
+                    <h1 class="font-display text-5xl md:text-6xl font-bold leading-tight">
+                        Fun & Fair <br><span class="text-court-light">Pickleball</span> for Kids!
+                    </h1>
+                    <p class="text-xl text-navy-100 max-w-lg mx-auto md:mx-0">
+                        Join our organized tournaments designed specifically for children of all skill levels. Learn, compete, and make friends on the court.
+                    </p>
+                    <div class="pt-4">
+                        <button onclick="navigateTo('registration')" class="bg-accent-orange text-white px-10 py-4 rounded-full font-display font-bold text-2xl border-4 border-navy-900 shadow-paddle hover:-translate-y-1 hover:shadow-[0_10px_0_0_rgba(16,42,67,1)] active:translate-y-2 active:shadow-none transition-all">
+                            Find a Tournament
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex-1 flex justify-center items-center z-10 animate-bounce-slight">
+                    <div class="relative">
+                        <div class="w-48 h-64 bg-white border-8 border-navy-800 shape-paddle relative z-10 flex items-center justify-center overflow-hidden shadow-xl">
+                            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_#102a43_2px,_transparent_2px)] bg-[size:10px_10px]"></div>
+                            <i class="fa-solid fa-face-smile text-6xl text-court-dark opacity-80"></i>
+                        </div>
+                        <div class="w-12 h-32 bg-accent-orange border-x-8 border-b-8 border-navy-800 absolute -bottom-24 left-1/2 transform -translate-x-1/2 z-0 rounded-b-xl shadow-lg">
+                            <div class="w-full h-1 bg-navy-800 absolute top-4 transform -rotate-12"></div>
+                            <div class="w-full h-1 bg-navy-800 absolute top-10 transform -rotate-12"></div>
+                            <div class="w-full h-1 bg-navy-800 absolute top-16 transform -rotate-12"></div>
+                            <div class="w-full h-1 bg-navy-800 absolute top-22 transform -rotate-12"></div>
+                        </div>
+                        <div class="w-16 h-16 bg-accent-yellow rounded-full border-4 border-navy-800 absolute -top-8 -right-8 shadow-lg flex items-center justify-center">
+                            <div class="w-2 h-2 bg-navy-800 rounded-full opacity-30"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-3xl border-4 border-navy-800 shadow-card text-center transform hover:rotate-2 transition-transform">
+                    <div class="w-20 h-20 mx-auto bg-court-light rounded-full flex items-center justify-center mb-6 border-4 border-navy-800 text-3xl text-navy-800 shadow-[inset_0_-4px_0_0_rgba(14,165,233,1)]">
+                        🏆
+                    </div>
+                    <h3 class="font-display text-2xl font-bold mb-3">Fair Competition</h3>
+                    <p class="text-navy-500 font-semibold">Players are grouped by teams and skill levels to ensure everyone has a great time on the court.</p>
+                </div>
+                <div class="bg-white p-8 rounded-3xl border-4 border-navy-800 shadow-card text-center transform hover:-rotate-2 transition-transform">
+                    <div class="w-20 h-20 mx-auto bg-accent-yellow rounded-full flex items-center justify-center mb-6 border-4 border-navy-800 text-3xl text-navy-800 shadow-[inset_0_-4px_0_0_rgba(250,204,21,1)]">
+                        📅
+                    </div>
+                    <h3 class="font-display text-2xl font-bold mb-3">Easy Scheduling</h3>
+                    <p class="text-navy-500 font-semibold">Log in to your personalized dashboard to see exact match pairings and opponents.</p>
+                </div>
+                <div class="bg-white p-8 rounded-3xl border-4 border-navy-800 shadow-card text-center transform hover:rotate-2 transition-transform">
+                    <div class="w-20 h-20 mx-auto bg-accent-orange rounded-full flex items-center justify-center mb-6 border-4 border-navy-800 text-3xl text-navy-800 shadow-[inset_0_-4px_0_0_rgba(249,115,22,1)]">
+                        🤝
+                    </div>
+                    <h3 class="font-display text-2xl font-bold mb-3">Community</h3>
+                    <p class="text-navy-500 font-semibold">Meet other families, track scores, and celebrate the sportsmanship of all kids.</p>
+                </div>
+            </div>
+
+            <!-- News Integrated into Home -->
+            <div class="bg-white rounded-[3rem] p-8 md:p-12 border-4 border-navy-800 shadow-[8px_8px_0_0_rgba(16,42,67,1)] relative">
+                <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-navy-800 text-white px-8 py-2 rounded-full font-display font-bold text-2xl border-4 border-white shadow-md">
+                    Court News & Updates
+                </div>
+                
+                <div class="mt-6 flex flex-col lg:flex-row gap-8">
+                    <div class="flex-grow space-y-6">
+                        <article class="bg-navy-50 p-6 rounded-2xl border-2 border-navy-100 flex flex-col sm:flex-row gap-6 items-center sm:items-start group hover:border-court-dark transition-colors">
+                            <div class="w-full sm:w-40 h-32 bg-court-dark rounded-xl flex-shrink-0 flex items-center justify-center text-white text-4xl shadow-inner border-2 border-white transform group-hover:scale-105 transition-transform">
+                                📣
+                            </div>
+                            <div class="flex-grow flex flex-col justify-between h-full">
+                                <div>
+                                    <span class="inline-block bg-accent-yellow px-2 py-1 rounded text-xs font-bold text-navy-800 uppercase tracking-wider mb-2">Tournament Info</span>
+                                    <h3 class="font-display text-2xl font-bold mb-2 text-navy-800">Spring Smash 2024 Dates!</h3>
+                                    <p class="text-navy-500 font-semibold text-sm line-clamp-2">Get ready for the biggest event of the season. Registration is now open, grab your team spot before it fills up!</p>
+                                </div>
+                                <div class="mt-4 flex items-center justify-between">
+                                    <span class="text-sm font-bold text-navy-400"><i class="fa-regular fa-clock mr-1"></i> Oct 15</span>
+                                    <button onclick="navigateTo('registration')" class="text-sm font-bold text-accent-orange hover:text-navy-800 bg-white px-4 py-1.5 rounded-full border-2 border-accent-orange hover:border-navy-800 transition-colors">Register Now</button>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="bg-navy-50 p-6 rounded-2xl border-2 border-navy-100 flex flex-col sm:flex-row gap-6 items-center sm:items-start group hover:border-court-dark transition-colors">
+                            <div class="w-full sm:w-40 h-32 bg-accent-orange rounded-xl flex-shrink-0 flex items-center justify-center text-white text-4xl shadow-inner border-2 border-white transform group-hover:scale-105 transition-transform">
+                                🏟️
+                            </div>
+                            <div class="flex-grow flex flex-col justify-between h-full">
+                                <div>
+                                    <span class="inline-block bg-navy-100 px-2 py-1 rounded text-xs font-bold text-navy-600 uppercase tracking-wider mb-2">Schedule Update</span>
+                                    <h3 class="font-display text-2xl font-bold mb-2 text-navy-800">Team Match Groupings Finalized</h3>
+                                    <p class="text-navy-500 font-semibold text-sm line-clamp-2">Please check your player dashboard to see team-versus-team match structures and total points.</p>
+                                </div>
+                                <div class="mt-4 flex items-center justify-between">
+                                    <span class="text-sm font-bold text-navy-400"><i class="fa-regular fa-clock mr-1"></i> Oct 10</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <aside class="w-full lg:w-80 flex-shrink-0">
+                        <div class="bg-white p-6 rounded-2xl border-4 border-navy-800 h-full">
+                            <h4 class="font-display font-bold text-xl mb-4 border-b-2 border-navy-100 pb-2 text-navy-800">Upcoming Events</h4>
+                            <ul class="space-y-4">
+                                <li class="flex items-center gap-4 bg-navy-50 p-3 rounded-xl border border-navy-100">
+                                    <div class="w-16 h-16 bg-white rounded-lg border-2 border-navy-800 flex flex-col items-center justify-center flex-shrink-0 shadow-sm">
+                                        <span class="text-xs font-bold text-accent-orange uppercase">Nov</span>
+                                        <span class="text-xl font-display font-bold text-navy-800 leading-none">12</span>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-bold text-navy-800 leading-tight">Fall Junior Classic</h5>
+                                        <a href="#" onclick="navigateTo('registration')" class="text-sm font-bold text-court-dark hover:text-navy-800 underline mt-1 inline-block">View Details</a>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </section>
+
+        <!-- REGISTRATION & TOURNAMENTS VIEW -->
+        <section id="view-registration" class="page-section space-y-12">
+            <div class="text-center max-w-2xl mx-auto bg-white p-8 rounded-3xl border-4 border-navy-800 shadow-[8px_8px_0_0_rgba(16,42,67,1)]">
+                <h2 class="font-display text-4xl font-bold text-navy-800">Tournaments & Registration</h2>
+                <p class="text-navy-500 font-semibold mt-4 text-lg">Find upcoming tournaments to join with your team!</p>
+            </div>
+
+            <!-- Active Tournament -->
+            <div class="bg-white border-4 border-navy-800 rounded-[2rem] overflow-hidden shadow-[8px_8px_0_0_rgba(16,42,67,1)]">
+                <div class="bg-navy-800 p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 border-b-4 border-navy-900 relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_#ffffff_2px,_transparent_2px)] bg-[size:20px_20px]"></div>
+                    
+                    <div class="relative z-10 text-center md:text-left">
+                        <span class="inline-block px-4 py-1.5 bg-accent-yellow text-navy-900 text-sm font-bold rounded-full mb-3 shadow-sm border-2 border-navy-900">Registration OPEN</span>
+                        <h3 class="font-display text-3xl md:text-4xl font-bold text-white">Fall Junior Classic</h3>
+                        <p class="text-navy-100 font-bold mt-2 text-lg"><i class="fa-solid fa-location-dot mr-2 text-accent-orange"></i> Community Center Courts • Nov 12 - Nov 14</p>
+                    </div>
+                    <button class="relative z-10 w-full md:w-auto bg-accent-yellow text-navy-900 px-8 py-4 rounded-full font-display font-bold text-xl border-4 border-navy-900 shadow-[0_6px_0_0_rgba(16,42,67,1)] hover:-translate-y-1 hover:shadow-[0_8px_0_0_rgba(16,42,67,1)] active:translate-y-2 active:shadow-none transition-all flex items-center justify-center gap-2">
+                        Register (Google Form) <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </button>
+                </div>
+                <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white">
+                    <div class="bg-navy-50 p-6 rounded-2xl border-2 border-navy-100">
+                        <h4 class="font-display font-bold text-xl mb-4 text-navy-800 flex items-center gap-2">
+                            <span class="bg-white p-2 rounded-lg border-2 border-navy-800 shadow-sm"><i class="fa-solid fa-clipboard-list text-court-dark"></i></span> Requirements
+                        </h4>
+                        <ul class="space-y-3 font-semibold text-navy-600">
+                            <li class="flex items-start gap-2"><i class="fa-solid fa-check text-court-dark mt-1"></i> Register as a Team (4 players per team).</li>
+                            <li class="flex items-start gap-2"><i class="fa-solid fa-check text-court-dark mt-1"></i> Skill levels: Beginner and Intermediate.</li>
+                            <li class="flex items-start gap-2"><i class="fa-solid fa-check text-court-dark mt-1"></i> Must bring own USAPA approved paddle.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-navy-50 p-6 rounded-2xl border-2 border-navy-100">
+                        <h4 class="font-display font-bold text-xl mb-4 text-navy-800 flex items-center gap-2">
+                            <span class="bg-white p-2 rounded-lg border-2 border-navy-800 shadow-sm"><i class="fa-solid fa-circle-info text-accent-orange"></i></span> Details
+                        </h4>
+                        <div class="space-y-4 font-semibold text-navy-600">
+                            <p class="flex justify-between border-b border-navy-200 pb-2"><span>Entry Fee:</span> <span class="font-bold text-navy-800">$25 per player</span></p>
+                            <p class="flex justify-between border-b border-navy-200 pb-2"><span>Format:</span> <span class="font-bold text-navy-800">Team Round Robin</span></p>
+                            <p class="text-sm mt-4 bg-white p-3 rounded-lg border border-navy-200">Match groups announced 3 days prior. Log in to view personal schedule.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DASHBOARD VIEW -->
+        <section id="view-dashboard" class="page-section space-y-8">
+            <div class="bg-navy-800 p-8 rounded-[2rem] border-4 border-white shadow-[8px_8px_0_0_rgba(16,42,67,1)] flex flex-col md:flex-row justify-between items-center gap-6 text-white relative overflow-hidden">
+                 <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl"><i class="fa-solid fa-table-tennis-paddle-ball"></i></div>
+                <div class="z-10 text-center md:text-left">
+                    <h2 class="font-display text-4xl font-bold">Welcome back, Alex!</h2>
+                    <p class="text-navy-100 mt-2 font-semibold bg-navy-900 inline-block px-4 py-1 rounded-full">Team: Team 1 • Fall Junior Classic</p>
+                </div>
+                <div class="z-10 w-20 h-20 rounded-full bg-accent-yellow border-4 border-white flex items-center justify-center text-navy-900 font-display font-bold text-4xl shadow-lg">
+                    A
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
+                <div class="lg:col-span-2 space-y-8">
+                    
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-display font-bold text-2xl text-navy-800 border-b-4 border-court-dark pb-1 inline-block">Upcoming Matches</h3>
+                    </div>
+                    
+                    <!-- Scoreboard Style Match Card (No Court Number) -->
+                    <div class="bg-navy-900 p-6 rounded-[2rem] border-4 border-navy-800 shadow-[8px_8px_0_0_rgba(16,42,67,0.2)] relative">
+                        <div class="absolute top-0 right-6 bg-accent-yellow text-navy-900 text-sm font-bold px-4 py-1 rounded-b-xl border-x-2 border-b-2 border-navy-900">Next Match</div>
+                        
+                        <div class="flex justify-between items-center mb-6 text-white">
+                            <span class="text-xs font-bold bg-navy-800 px-3 py-1.5 rounded-lg border border-navy-600">Fall Classic • Team Match</span>
+                            <span class="text-sm font-bold bg-navy-800 px-3 py-1.5 rounded-lg border border-navy-600"><i class="fa-regular fa-clock mr-1 text-court-light"></i> Today, 2:00 PM</span>
+                        </div>
+                        
+                        <div class="bg-court-dark rounded-xl p-2 border-4 border-white relative">
+                            <div class="absolute inset-0 border-2 border-white/50 m-4 pointer-events-none"></div>
+                            <div class="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white/50 pointer-events-none"></div>
+                            <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-white/50 pointer-events-none"></div>
+
+                            <div class="flex items-center justify-between relative z-10 py-6 px-4">
+                                <div class="text-center bg-white/90 p-4 rounded-xl border-2 border-navy-800 shadow-md w-32 backdrop-blur-sm">
+                                    <div class="w-12 h-12 mx-auto bg-accent-yellow border-2 border-navy-800 rounded-full mb-2 flex items-center justify-center font-display font-bold text-navy-900 text-xl">T1</div>
+                                    <span class="font-bold block text-lg text-navy-900 leading-tight">Team 1</span>
+                                    <span class="text-xs font-bold text-navy-500">(Your Team)</span>
+                                </div>
+                                
+                                <div class="text-center px-4 flex flex-col items-center justify-center">
+                                    <span class="font-display text-4xl font-extrabold text-white drop-shadow-md">VS</span>
+                                </div>
+                                
+                                <div class="text-center bg-white/90 p-4 rounded-xl border-2 border-navy-800 shadow-md w-32 backdrop-blur-sm">
+                                    <div class="w-12 h-12 mx-auto bg-navy-100 border-2 border-navy-800 rounded-full mb-2 flex items-center justify-center font-display font-bold text-navy-500 text-xl">T2</div>
+                                    <span class="font-bold block text-lg text-navy-900 leading-tight">Team 2</span>
+                                    <span class="text-xs font-bold text-navy-500">Opponent</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="font-display font-bold text-2xl text-navy-800 border-b-4 border-court-dark pb-1 inline-block mt-8">Recent Results</h3>
+                    
+                    <!-- Result Card (Team 1 vs Team 5 - Format: Your Score - Opponent) -->
+                    <div class="bg-white p-6 rounded-[2rem] border-4 border-navy-800 shadow-card mt-4 hover:border-court-dark transition-colors">
+                        <div class="flex justify-between items-center mb-4 border-b-2 border-navy-50 pb-2">
+                            <span class="text-xs font-bold text-navy-500 bg-navy-50 px-2 py-1 rounded">Fall Classic • Team Match</span>
+                            <span class="text-sm font-bold text-navy-800">Aug 21</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-3 w-1/3">
+                                <div class="w-10 h-10 bg-accent-yellow border-2 border-navy-800 rounded-full flex items-center justify-center font-bold text-navy-900 hidden sm:flex">T1</div>
+                                <div>
+                                    <span class="font-bold text-navy-800 text-lg block leading-tight">Team 1</span>
+                                    <span class="text-[10px] bg-court-light text-navy-900 px-1.5 py-0.5 rounded-full font-bold">YOUR TEAM</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Highlighted Points: Your Score - Opponent Score -->
+                            <div class="flex flex-col items-center justify-center w-1/3" onclick="simulateScoreUpdate(this)">
+                                <span class="text-[10px] text-navy-400 font-bold uppercase tracking-wider mb-1">Total Points (Your Team - Opponent)</span>
+                                <div class="bg-navy-900 px-4 py-2 rounded-xl border-4 border-navy-800 flex items-center justify-center gap-3 shadow-inner cursor-pointer">
+                                    <span class="font-display text-3xl font-bold text-accent-yellow score-val">53</span>
+                                    <span class="text-navy-400 font-bold text-xl">-</span>
+                                    <span class="font-display text-3xl font-bold text-white score-val">34</span>
+                                </div>
+                                <span class="text-xs font-bold text-court-dark mt-2"><i class="fa-solid fa-check-circle"></i> Victory</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-end gap-3 w-1/3">
+                                <span class="font-bold text-navy-500 text-lg">Team 5</span>
+                                <div class="w-10 h-10 bg-navy-100 border-2 border-navy-300 rounded-full flex items-center justify-center font-bold text-navy-400 hidden sm:flex">T5</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Result Card (Team 1 vs Team 2) -->
+                    <div class="bg-white p-6 rounded-[2rem] border-4 border-navy-800 shadow-card mt-4 hover:border-accent-orange transition-colors">
+                        <div class="flex justify-between items-center mb-4 border-b-2 border-navy-50 pb-2">
+                            <span class="text-xs font-bold text-navy-500 bg-navy-50 px-2 py-1 rounded">Fall Classic • Team Match</span>
+                            <span class="text-sm font-bold text-navy-800">Aug 18</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-3 w-1/3">
+                                <div class="w-10 h-10 bg-accent-yellow border-2 border-navy-800 rounded-full flex items-center justify-center font-bold text-navy-900 hidden sm:flex">T1</div>
+                                <div>
+                                    <span class="font-bold text-navy-800 text-lg block leading-tight">Team 1</span>
+                                    <span class="text-[10px] bg-court-light text-navy-900 px-1.5 py-0.5 rounded-full font-bold">YOUR TEAM</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-col items-center justify-center w-1/3" onclick="simulateScoreUpdate(this)">
+                                <span class="text-[10px] text-navy-400 font-bold uppercase tracking-wider mb-1">Total Points (Your Team - Opponent)</span>
+                                <div class="bg-navy-900 px-4 py-2 rounded-xl border-4 border-navy-800 flex items-center justify-center gap-3 shadow-inner cursor-pointer">
+                                    <span class="font-display text-3xl font-bold text-white score-val">42</span>
+                                    <span class="text-navy-400 font-bold text-xl">-</span>
+                                    <span class="font-display text-3xl font-bold text-accent-orange score-val">45</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-end gap-3 w-1/3">
+                                <span class="font-bold text-navy-500 text-lg">Team 2</span>
+                                <div class="w-10 h-10 bg-navy-100 border-2 border-navy-300 rounded-full flex items-center justify-center font-bold text-navy-400 hidden sm:flex">T2</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Standings Sidebar -->
+                <aside class="space-y-6">
+                    <div class="bg-white p-6 rounded-[2rem] border-4 border-navy-800 shadow-card sticky top-24">
+                        <h4 class="font-display font-bold text-2xl mb-6 text-navy-900 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-accent-orange rounded-full flex items-center justify-center text-white text-sm border-2 border-navy-800"><i class="fa-solid fa-users"></i></div>
+                            Team Standings
+                        </h4>
+                        
+                        <div class="bg-navy-50 rounded-xl p-5 border-2 border-navy-100 mb-6">
+                            <p class="font-display font-bold text-navy-800 text-lg leading-tight">Fall Classic</p>
+                            <p class="text-xs font-bold text-navy-500 mt-1 uppercase tracking-wider">Group B</p>
+                        </div>
+                            
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-xs font-bold text-navy-400 uppercase px-2 pb-2 border-b-2 border-navy-100">
+                                <span>Team</span>
+                                <span>Total Pts</span>
+                            </div>
+                            
+                            <div class="flex justify-between items-center bg-white p-3 rounded-lg border-2 border-navy-100 hover:border-court-dark transition-colors">
+                                <span class="font-bold text-navy-800">1. Team 3</span>
+                                <span class="bg-navy-100 text-navy-800 font-bold px-2 py-1 rounded w-10 text-center">145</span>
+                            </div>
+                            
+                            <div class="flex justify-between items-center bg-court-light p-3 rounded-lg border-2 border-court-dark transform scale-105 shadow-sm origin-left">
+                                <span class="font-bold text-navy-900 flex items-center gap-2">2. Team 1 <span class="text-[10px] bg-white px-1.5 py-0.5 rounded-full text-court-dark">YOU</span></span>
+                                <span class="bg-white text-navy-900 font-bold px-2 py-1 rounded w-10 text-center shadow-sm">132</span>
+                            </div>
+                            
+                            <div class="flex justify-between items-center bg-white p-3 rounded-lg border-2 border-navy-100">
+                                <span class="font-semibold text-navy-600">3. Team 2</span>
+                                <span class="bg-navy-50 text-navy-600 font-bold px-2 py-1 rounded w-10 text-center">110</span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-navy-900 text-navy-100 py-10 mt-auto border-t-8 border-court-dark relative z-10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-court-dark rounded-full flex items-center justify-center border-2 border-white">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8Z" /></svg>
+                </div>
+                <span class="font-display font-bold text-2xl text-white tracking-tight">PickleKids</span>
+            </div>
+            
+            <div class="text-sm font-semibold text-center md:text-left">
+                &copy; 2024 PickleKids Tournaments.
+            </div>
+            
+            <div class="flex gap-4">
+                <a href="https://wa.me/1234567890" target="_blank" class="bg-court-light text-navy-900 px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-white transition-colors border-2 border-transparent hover:border-court-dark">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> Support Chat
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 z-50 bg-navy-900/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] border-4 border-navy-800 shadow-[8px_8px_0_0_rgba(253,224,71,1)] w-full max-w-md overflow-hidden relative transform scale-100 transition-transform">
+            
+            <div class="bg-navy-800 p-6 text-center relative border-b-4 border-accent-yellow">
+                <button onclick="toggleModal('loginModal')" class="absolute top-4 right-4 w-8 h-8 bg-white/10 rounded-full text-white hover:bg-white hover:text-navy-900 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="w-16 h-16 bg-court-dark rounded-full flex items-center justify-center mx-auto mb-3 border-4 border-white shadow-md">
+                    <i class="fa-solid fa-user-astronaut text-white text-2xl"></i>
+                </div>
+                <h2 class="font-display text-3xl font-bold text-white">Player Login</h2>
+            </div>
+
+            <div class="p-8">
+                <form onsubmit="event.preventDefault(); mockLogin();" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold text-navy-600 mb-1">Email Address</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-envelope text-navy-300"></i>
+                            </div>
+                            <input type="email" placeholder="parent@example.com" value="parent@example.com" class="w-full pl-10 pr-4 py-3 bg-navy-50 border-2 border-navy-200 rounded-xl font-semibold text-navy-800 focus:outline-none focus:border-court-dark focus:bg-white transition-colors">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-end mb-1">
+                            <label class="block text-sm font-bold text-navy-600">Password</label>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-lock text-navy-300"></i>
+                            </div>
+                            <input type="password" value="password" class="w-full pl-10 pr-4 py-3 bg-navy-50 border-2 border-navy-200 rounded-xl font-semibold text-navy-800 focus:outline-none focus:border-court-dark focus:bg-white transition-colors">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-accent-yellow text-navy-900 font-display font-bold text-xl py-3 rounded-xl border-4 border-navy-900 shadow-[0_4px_0_0_rgba(16,42,67,1)] hover:translate-y-1 hover:shadow-none transition-all mt-4">
+                        Let's Play! 🎾
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function navigateTo(pageId) {
+            const pages = document.querySelectorAll('.page-section');
+            pages.forEach(page => page.classList.remove('active'));
+
+            const target = document.getElementById('view-' + pageId);
+            if (target) target.classList.add('active');
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => link.classList.remove('active'));
+            
+            navLinks.forEach(link => {
+                if(link.getAttribute('onclick') && link.getAttribute('onclick').includes(pageId)) {
+                    link.classList.add('active');
+                }
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function mockLogin() {
+            toggleModal('loginModal');
+            document.getElementById('navLoginBtn').classList.add('hidden');
+            const dashBtn = document.getElementById('navDashboardBtn');
+            dashBtn.classList.remove('hidden');
+            dashBtn.classList.add('flex');
+            navigateTo('dashboard');
+        }
+
+        function simulateScoreUpdate(element) {
+            const scores = element.querySelectorAll('.score-val');
+            scores.forEach(score => {
+                score.classList.remove('animate-score-flash');
+                void score.offsetWidth; 
+                score.classList.add('animate-score-flash');
+            });
+        }
+    </script>
+</body>
+</html>
